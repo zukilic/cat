@@ -1,0 +1,199 @@
+#include <stdio.h>
+#include <string.h>
+
+/*reading without option*/
+void readwithoutoption(int argc, char **argv){
+	FILE *f; 		                /*the file wanted to be opened*/
+	for(int i = 1; i < argc; i++){
+		f = fopen(argv[i],"r");
+		if(f == NULL){
+			fprintf(stderr, "%s", "FILE NOT FOUND\n");	
+			return;
+		}
+		char c;     
+		while((c = fgetc(f)) != EOF){        
+			printf("%c", c);	/*print file content to the command line*/
+		}
+		printf("\n");
+		fclose(f);
+	}
+}
+
+/*copying and writing without option*/
+void writewithoutoption(int argc, char **argv){
+	FILE *f1, *f2;						/*the files wanted to be opened*/
+	char s[10001];						/*holds the file content to be received from the user*/
+	f1 = fopen(argv[argc-1],"w");		/*resets the contents of the file and opens it for writing*/
+	if(f1 == NULL){
+		fprintf(stderr, "%s", "FILE NOT FOUND\n");	
+		return;
+	}
+	if(argc == 3){
+		/*if a file name has not been entered before the > sign*/
+		puts("Please enter what you want to write in the file:");
+		scanf("%[^/]10000s", s);		
+		fprintf(f1, "%.10000s", s);		/*write the array to the file*/
+	}
+	else{
+		for(int i = 1; i < argc-2; i++){
+			f2 = fopen(argv[i],"r");	/*opens the file for reading*/
+			if(f2 == NULL){
+				fprintf(stderr, "%s", "FILE NOT FOUND\n");	
+				return;
+			}    
+			while (fgets (s, 10000, f2) != NULL){  /*assigns the f2 file to the s array*/       
+				fputs(s, f1);			/*copies the s array to the f1 file*/
+			}
+			fputs("\n", f1);			/*places space between two files when copying*/
+			fclose(f2);
+		}
+	}
+	fclose(f1);
+}
+
+/*reading with option*/
+void readwithoption(int argc, char **argv){
+	FILE *f;									/*the file wanted to be opened*/
+	for(int i = 2; i < argc; i++){
+		f = fopen(argv[i],"r");					/*opens the file for reading*/
+		if(f == NULL){
+			fprintf(stderr, "%s", "FILE NOT FOUND\n");	
+			return;
+		}
+		char s[10000];							/*holds the file content to be received from the user*/
+		int a = 1;								/*counter*/
+		while((fgets(s, 10000, f)) != NULL){	/*assings the f file to the s array*/
+			if(!(strcmp(argv[1], "-b"))){		/*if opened in -b mode*/
+				/*any row without spaces is numbered*/
+				if(!(strcmp(s, "\n"))){
+					printf("%s", s);
+				}
+				else{
+					printf("%d. ", a);
+					printf("%s", s);
+					a++;
+				}
+			}
+			else if(!(strcmp(argv[1], "-n"))){	/*if opened in -n mode*/
+				/*each carriage is numbered*/
+				printf("%d. ", a);
+				printf("%s", s);
+				a++;
+			}
+		}
+		printf("\n");	
+		fclose(f);
+	}
+}
+
+/*copying and writing with option*/
+void writewithoption(int argc, char **argv){
+	FILE *f1, *f2;				/*the files wanted to be opened*/
+	char s[10001];				/*holds the file content to be received from the user*/
+	int a = 1;						/*counter*/
+	f1 = fopen(argv[argc-1],"w");	  /*resets the contents of the file and opens it for writing*/
+	if(f1 == NULL){
+		fprintf(stderr, "%s", "FILE NOT FOUND\n");	
+		return;
+	}
+	if(argc == 4){
+		/*if a file name has not been entered before the > sign*/
+		puts("Please enter what you want to write in the file:");
+		while((fgets(s, 10000, stdin)) != NULL){
+			if(!(strcmp(argv[1], "-b"))){	/*if opened in -b mode*/
+				/*any row without spaces is numberedr*/
+				if(!(strcmp(s, "\n"))){
+					fprintf(f1, "%s", s);
+				}
+				else{
+					fprintf(f1,"%d. ", a);						
+					fprintf(f1,"%s", s);
+					a++;
+				}
+			}
+			else if(!(strcmp(argv[1], "-n"))){	/*if opened in -n mode*/
+				/*each carriage is numbered*/
+				fprintf(f1, "%d. ", a);
+				fprintf(f1, "%s", s);
+				a++;
+			}
+		}
+	}
+	else{
+		for(int i = 2; i < argc-2; i++){
+			f2 = fopen(argv[i],"r");				/*opens the f2 file for reading*/
+			if(f2 == NULL){
+				fprintf(stderr, "%s", "FILE NOT FOUND\n");	
+				return;
+			}    
+			while (fgets (s, 10000, f2) != NULL){
+				if(!(strcmp(argv[1], "-b"))){		/*if opened in -b mode*/
+					/*any row without spaces is numbered*/
+					if(!(strcmp(s, "\n"))){
+						fprintf(f1, "%s", s);
+					}
+					else{
+						fprintf(f1,"%d. ", a);
+						fprintf(f1,"%s", s);
+						a++;
+					}
+				}
+				else if(!(strcmp(argv[1], "-n"))){	/*if opened in -n mode*/
+					/*eache carriage is numbered*/
+					fprintf(f1, "%d. ", a);
+					fprintf(f1, "%s", s);
+					a++;
+				}
+			}
+			fputs("\n", f1);	/*puts a space between files*/
+			fclose(f2);
+		}
+	}
+	fclose(f1);
+}
+
+int main(int argc, char **argv){
+	
+	if((!(strcmp(argv[1], "-b"))) || (!(strcmp(argv[1], "-n")))){
+		/*if -n or -b is entered*/
+		if(!(strcmp(argv[argc-2], ">"))){
+			/*if > is entered and then a file name is entered*/
+			writewithoption(argc, argv);
+		}
+		else if((argc >= 4) && (!(strcmp(argv[argc-1], ">")))){
+			/*if a file name has not been entered after the > sign*/
+			printf("!!!ERROR!!!\n");
+			printf("You must enter a file name after the > sign.\n");
+		}
+		else{
+			/*only if the filename is written*/
+			readwithoption(argc, argv);
+		}
+	}
+	else if(!(strcmp(argv[1], "-h"))){		/*if -h is entered*/
+		printf("This program offers the user two different options.\n");
+		printf("First option is reading without option:\n");
+		printf("\tcat file1.txt: The program reads the contents of the file named file1.txt.\n");
+		printf("\tcat file1.txt > file2.txt: It copies the contents of file1.txt to file2.txt.\n");
+		printf("\tcat file1.txt file2.txt >: First gives the error message, then shows the correct use of the cat and exits the program.\n");
+		printf("\tcat > file1.txt: First it passes to a new line, then the user writes his input to file1.txt.\n");
+		printf("The second option is reading with option:\n");
+		printf("\tcat -b: Enumerates non-empty lines.\n");
+		printf("\tcat -n: Enumerates all the lines.\n");
+		printf("\tcat -h: It tells how the program is used.\n");
+	}
+	else if(!(strcmp(argv[argc-2], ">"))){
+		/*if > is entered and then a file name is entered*/
+		writewithoutoption(argc, argv);
+	}
+	else if((argc >= 3) && (!(strcmp(argv[argc-1], ">")))){
+		/*if a file name has not been entered after the > sign*/
+		printf("!!!ERROR!!!\n");
+		printf("You must enter a file name after the > sign.\n");
+	}
+	else{
+		/*only if the filename is written*/
+		readwithoutoption(argc, argv);
+	}
+	return 0;
+}
